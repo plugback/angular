@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Offline DB Test</title>
+    <link rel="stylesheet" href="http://code.jquery.com/qunit/qunit-1.14.0.css">
+
+    <script src="../lib/localforage/dist/localforage.min.js"></script>
+    <script src="db.js"></script>
+</head>
+<body>
+<div id="qunit"></div>
+<div id="qunit-fixture"></div>
+<script src="http://code.jquery.com/qunit/qunit-1.14.0.js"></script>
+<script type="text/javascript">
+
+    var X = (function () {
+        function X() {
+            console.log("starting X");
+        }
+        return X;
+    })();
+
+    var Y = (function () {
+        function Y() {
+            console.log("starting Y");
+        }
+        return Y;
+    })();
+
+
+    var db = new DB(localforage)
+
+    var x = new X()
+    x.x = 1
+
+    var xId = db.save(x)
+
+    var y = new Y()
+    y.y = 1
+
+    var yId = db.save(y)
+
+    setTimeout(function () {
+        db.getAll(X).then(function (xFound) {
+            QUnit.test("test save and getAll", function (assert) {
+                assert.ok(xFound.length == 1, "Found size test passed")
+                assert.ok(x.x == xFound[0].x, "Found first element check passed")
+            });
+
+        })
+    }, 1000);
+
+    setTimeout(function () {
+        db.clearAll(X)
+
+    }, 1500);
+
+    setTimeout(function () {
+        db.getAll(X).then(function (xFound) {
+            QUnit.test("test proper deletion for X", function (assert) {
+                assert.ok(xFound == null, "Found x test passed")
+            });
+
+        })
+        db.getAll(Y).then(function (yFound) {
+            QUnit.test("test proper deletion for Y", function (assert) {
+                assert.ok(yFound.length == 1, "Found y test passed")
+            });
+
+        })
+    }, 1600);
+
+
+    setTimeout(function () {
+        db.clearAll(Y)
+    }, 3000)
+
+    setTimeout(function () {
+        var x1 = new X()
+        x.x = 1
+        var x2 = new X()
+        x.x = 2
+        var y1 = new Y()
+        y.y = 3
+
+        x1 = db.save(x1)
+        x2 = db.save(x2)
+        y1 = db.save(y1)
+
+        setTimeout(function () {
+            db.remove(x1)
+            setTimeout(function () {
+
+                db.getAll(X).then(function (xFound) {
+                    QUnit.test("test proper deletion of a single object", function (assert) {
+                        assert.ok(xFound.length == 1, "Found x size test passed")
+                    });
+                })
+
+                db.getAll(Y).then(function (yFound) {
+                    QUnit.test("test proper deletion of a single object", function (assert) {
+                        assert.ok(yFound.length == 1, "Found y size test passed")
+                    });
+                })
+
+                setTimeout(function () {
+                    db.clearAll(X)
+                    db.clearAll(Y)
+                }, 500)
+
+            }, 500)
+        }, 500)
+    }, 4000)
+
+
+</script>
+</body>
+</html>
